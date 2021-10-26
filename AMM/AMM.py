@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 Created on Tue Oct  5 13:15:33 2021
@@ -121,11 +120,10 @@ def step7():
                             continue       
                     time.sleep(1)
                 elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
-                        error['text']='               Power Turned ON               '
-                        error['bg']='#36cf4f' 
-                        print('Power Turned ON') 
-                        time.sleep(1)
-                        
+                    error['text']='               Power Turned ON               '
+                    error['bg']='#36cf4f' 
+                    print('Power Turned ON') 
+                    time.sleep(1)         
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
@@ -245,30 +243,33 @@ def step7():
                         ser.write(b'\xfa\x0c\x2c\x00\x00\xfb')
                         process3['text']='Trap Door Close'
                     l+=1
-                    error['text']="                                  no error                                  "
-                        
+                    error['text']="                                  no error                                  "   
+                    error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    error['text']="Power Loss"
-                    print("Power Loss") 
-                    time.sleep(600)
                     p=0
-                    while p<600:
-                        if p%2:
-                            error['bg']='#ed7464'
-                        else:
-                            error['bg']='#ba001c'
+                    while True:
+                        master.update_idletasks()
+                        master.configure(bg='#40d0e3')
+                        time.sleep(1)
+                        
+                        error['text']="Power Loss, Using Battery Supply"
+                        print("Power Loss") 
+                        error['bg']='#ba001c'
                         p+=1
-                    if s2[2:4]=='09' and s2[8:10]=='00': #Power ON
-                        error['text']='Power Turned ON'
-                        print('Power Turned ON') 
-                        time.sleep(1)
-                    elif s2[2:4]=='09' and s2[8:10]!='00':
-                        error['text']='Cookin Process Terminated'
-                        print('Cooking Process Terminated') 
-                        time.sleep(1)
-                        master.destroy()
-                        break
-                    break
+                        if p==5:
+                            error['text']='Cooking Process Terminated'
+                            print('Cooking Process Terminated') 
+                            time.sleep(1)
+                            master.destroy()
+                            break
+                        else:
+                            continue       
+                    time.sleep(1)
+                elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
+                    error['text']='               Power Turned ON               '
+                    error['bg']='#36cf4f' 
+                    print('Power Turned ON') 
+                    time.sleep(1) 
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
@@ -388,30 +389,33 @@ def step7():
                         ser.write(b'\xfa\x0c\x2c\x00\x00\xfb')
                         process3['text']='Trap Door Close'
                     m+=1
-                    error['text']="                                  no error                                  "
-                        
+                    error['text']="                                  no error                                  "   
+                    error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    error['text']="Power Loss"
-                    print("Power Loss") 
-                    time.sleep(600)
                     p=0
-                    while p<600:
-                        if p%2:
-                            error['bg']='#ed7464'
-                        else:
-                            error['bg']='#ba001c'
+                    while True:
+                        master.update_idletasks()
+                        master.configure(bg='#40d0e3')
+                        time.sleep(1)
+                        
+                        error['text']="Power Loss, Using Battery Supply"
+                        print("Power Loss") 
+                        error['bg']='#ba001c'
                         p+=1
-                    if s2[2:4]=='09' and s2[8:10]=='00': #Power ON
-                        error['text']='Power Turned ON'
-                        print('Power Turned ON') 
-                        time.sleep(1)
-                    elif s2[2:4]=='09' and s2[8:10]!='00':
-                        error['text']='Cookin Process Terminated'
-                        print('Cooking Process Terminated') 
-                        time.sleep(1)
-                        master.destroy()
-                        break
-                    break
+                        if p==5:
+                            error['text']='Cooking Process Terminated'
+                            print('Cooking Process Terminated') 
+                            time.sleep(1)
+                            master.destroy()
+                            break
+                        else:
+                            continue       
+                    time.sleep(1)
+                elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
+                    error['text']='               Power Turned ON               '
+                    error['bg']='#36cf4f' 
+                    print('Power Turned ON') 
+                    time.sleep(1) 
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
@@ -521,30 +525,33 @@ def step7():
                         ser.write(b'\xfa\x1a\x3a\x00\x00\xfb')
                         process3['text']='Water Pump OFF'
                     n+=1
-                    error['text']="                                  no error                                  "
-                        
+                    error['text']="                                  no error                                  "      
+                    error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    error['text']="Power Loss"
-                    print("Power Loss") 
-                    time.sleep(600)
                     p=0
-                    while p<600:
-                        if p%2:
-                            error['bg']='#ed7464'
-                        else:
-                            error['bg']='#ba001c'
+                    while True:
+                        master.update_idletasks()
+                        master.configure(bg='#40d0e3')
+                        time.sleep(1)
+                        
+                        error['text']="Power Loss, Using Battery Supply"
+                        print("Power Loss") 
+                        error['bg']='#ba001c'
                         p+=1
-                    if s2[2:4]=='09' and s2[8:10]=='00': #Power ON
-                        error['text']='Power Turned ON'
-                        print('Power Turned ON') 
-                        time.sleep(1)
-                    elif s2[2:4]=='09' and s2[8:10]!='00':
-                        error['text']='Cookin Process Terminated'
-                        print('Cooking Process Terminated') 
-                        time.sleep(1)
-                        master.destroy()
-                        break
-                    break
+                        if p==5:
+                            error['text']='Cooking Process Terminated'
+                            print('Cooking Process Terminated') 
+                            time.sleep(1)
+                            master.destroy()
+                            break
+                        else:
+                            continue       
+                    time.sleep(1)
+                elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
+                    error['text']='               Power Turned ON               '
+                    error['bg']='#36cf4f' 
+                    print('Power Turned ON') 
+                    time.sleep(1) 
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
@@ -664,30 +671,33 @@ def step7():
                         ser.write(b'\xfa\x0c\x2c\x00\x00\xfb')
                         process3['text']='Trap Door Close'        
                     j+=1
-                    error['text']="                                  no error                                  "
-                        
+                    error['text']="                                  no error                                  "   
+                    error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    error['text']="Power Loss"
-                    print("Power Loss") 
-                    time.sleep(600)
                     p=0
-                    while p<600:
-                        if p%2:
-                            error['bg']='#ed7464'
-                        else:
-                            error['bg']='#ba001c'
+                    while True:
+                        master.update_idletasks()
+                        master.configure(bg='#40d0e3')
+                        time.sleep(1)
+                        
+                        error['text']="Power Loss, Using Battery Supply"
+                        print("Power Loss") 
+                        error['bg']='#ba001c'
                         p+=1
-                    if s2[2:4]=='09' and s2[8:10]=='00': #Power ON
-                        error['text']='Power Turned ON'
-                        print('Power Turned ON') 
-                        time.sleep(1)
-                    elif s2[2:4]=='09' and s2[8:10]!='00':
-                        error['text']='Cookin Process Terminated'
-                        print('Cooking Process Terminated') 
-                        time.sleep(1)
-                        master.destroy()
-                        break
-                    break
+                        if p==5:
+                            error['text']='Cooking Process Terminated'
+                            print('Cooking Process Terminated') 
+                            time.sleep(1)
+                            master.destroy()
+                            break
+                        else:
+                            continue       
+                    time.sleep(1)
+                elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
+                    error['text']='               Power Turned ON               '
+                    error['bg']='#36cf4f' 
+                    print('Power Turned ON') 
+                    time.sleep(1) 
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
@@ -810,30 +820,33 @@ def step7():
                         ser.write(b'\xfa\x0e\x1e\x00\x00\xfb')
                         process3['text']='Tray to Home Position'
                     j+=1
-                    error['text']="                                  no error                                  "
-                        
+                    error['text']="                                  no error                                  "    
+                    error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    error['text']="Power Loss"
-                    print("Power Loss") 
-                    time.sleep(600)
                     p=0
-                    while p<600:
-                        if p%2:
-                            error['bg']='#ed7464'
-                        else:
-                            error['bg']='#ba001c'
+                    while True:
+                        master.update_idletasks()
+                        master.configure(bg='#40d0e3')
+                        time.sleep(1)
+                        
+                        error['text']="Power Loss, Using Battery Supply"
+                        print("Power Loss") 
+                        error['bg']='#ba001c'
                         p+=1
-                    if s2[2:4]=='09' and s2[8:10]=='00': #Power ON
-                        error['text']='Power Turned ON'
-                        print('Power Turned ON') 
-                        time.sleep(1)
-                    elif s2[2:4]=='09' and s2[8:10]!='00':
-                        error['text']='Cookin Process Terminated'
-                        print('Cooking Process Terminated') 
-                        time.sleep(1)
-                        master.destroy()
-                        break
-                    break
+                        if p==5:
+                            error['text']='Cooking Process Terminated'
+                            print('Cooking Process Terminated') 
+                            time.sleep(1)
+                            master.destroy()
+                            break
+                        else:
+                            continue       
+                    time.sleep(1)
+                elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
+                    error['text']='               Power Turned ON               '
+                    error['bg']='#36cf4f' 
+                    print('Power Turned ON') 
+                    time.sleep(1) 
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
@@ -956,30 +969,33 @@ def step7():
                         ser.write(b'\xfa\x0e\x1e\x00\x00\xfb')
                         process3['text']='Tray to Home Position'
                     j+=1
-                    error['text']="                                  no error                                  "
-                        
+                    error['text']="                                  no error                                  "    
+                    error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    error['text']="Power Loss"
-                    print("Power Loss") 
-                    time.sleep(600)
                     p=0
-                    while p<600:
-                        if p%2:
-                            error['bg']='#ed7464'
-                        else:
-                            error['bg']='#ba001c'
+                    while True:
+                        master.update_idletasks()
+                        master.configure(bg='#40d0e3')
+                        time.sleep(1)
+                        
+                        error['text']="Power Loss, Using Battery Supply"
+                        print("Power Loss") 
+                        error['bg']='#ba001c'
                         p+=1
-                    if s2[2:4]=='09' and s2[8:10]=='00': #Power ON
-                        error['text']='Power Turned ON'
-                        print('Power Turned ON') 
-                        time.sleep(1)
-                    elif s2[2:4]=='09' and s2[8:10]!='00':
-                        error['text']='Cookin Process Terminated'
-                        print('Cooking Process Terminated') 
-                        time.sleep(1)
-                        master.destroy()
-                        break
-                    break
+                        if p==5:
+                            error['text']='Cooking Process Terminated'
+                            print('Cooking Process Terminated') 
+                            time.sleep(1)
+                            master.destroy()
+                            break
+                        else:
+                            continue       
+                    time.sleep(1)
+                elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
+                    error['text']='               Power Turned ON               '
+                    error['bg']='#36cf4f' 
+                    print('Power Turned ON') 
+                    time.sleep(1) 
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
@@ -1108,30 +1124,33 @@ def step7():
                         ser.write(b'\xfa\x1b\x3b\x00\x00\xfb')
                         process1['text']='Induction Power OFF'
                     j+=1
-                    error['text']="                                  no error                                  "
-                        
+                    error['text']="                                  no error                                  "    
+                    error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    error['text']="Power Loss"
-                    print("Power Loss") 
-                    time.sleep(600)
                     p=0
-                    while p<600:
-                        if p%2:
-                            error['bg']='#ed7464'
-                        else:
-                            error['bg']='#ba001c'
+                    while True:
+                        master.update_idletasks()
+                        master.configure(bg='#40d0e3')
+                        time.sleep(1)
+                        
+                        error['text']="Power Loss, Using Battery Supply"
+                        print("Power Loss") 
+                        error['bg']='#ba001c'
                         p+=1
-                    if s2[2:4]=='09' and s2[8:10]=='00': #Power ON
-                        error['text']='Power Turned ON'
-                        print('Power Turned ON') 
-                        time.sleep(1)
-                    elif s2[2:4]=='09' and s2[8:10]!='00':
-                        error['text']='Cookin Process Terminated'
-                        print('Cooking Process Terminated') 
-                        time.sleep(1)
-                        master.destroy()
-                        break
-                    break
+                        if p==5:
+                            error['text']='Cooking Process Terminated'
+                            print('Cooking Process Terminated') 
+                            time.sleep(1)
+                            master.destroy()
+                            break
+                        else:
+                            continue       
+                    time.sleep(1)
+                elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
+                    error['text']='               Power Turned ON               '
+                    error['bg']='#36cf4f' 
+                    print('Power Turned ON') 
+                    time.sleep(1) 
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
