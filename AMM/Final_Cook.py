@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 """
 Created on Tue Oct  5 13:15:33 2021
@@ -15,7 +16,7 @@ import cv2 as cv
 import numpy as np
 from pyzbar.pyzbar import decode
 
-ser=serial.Serial('COM17',115200) 
+ser=serial.Serial("/dev/ttyACM0",115200) 
 def serial():
     while True:
         #i=1
@@ -60,22 +61,50 @@ def step7():
         #elif s1==command for Battery Level 50%:
             #bar4['text']='Battery Level 50%' 
      
+        cap = cv.VideoCapture(0)
+        cap.set(3,640)
+        cap.set(4,480)
+        arr=[]  
         if i==0: 
-            progress_bar['maximum']=5  
-            
-            j=0
-            while j<5:
-                master.update_idletasks()
-                master.configure(bg='#40d0e3')
-                progress_bar['value'] += 1
-                increment()
-                time.sleep(1)
-                if j==0:
-                    process1['text']='Scanning QR Code'
-                if j==4:
-                    process1['text']='Scanning Completed'                                      
-                j+=1
-                error['text']="                                  no error                                  "
+            #label_1['bg']='#c71e1e'  
+            process1['text']='Scanning QR Code'
+            k=0
+            while k<6:
+             while True:
+                        master.update_idletasks()
+                        master.configure(bg='#40d0e3')
+                        ret,frame = cap.read()
+                        for barcode in decode(frame):
+                            #print(barcode.data)
+                            myData=barcode.data.decode('utf8')
+                            #print("loop")
+                            
+                            if myData in arr:
+                                continue
+                            elif len(arr)==6:                                
+                                break
+                            else:
+                                arr.append(myData)
+                                ser.write(b'\xfa\x0e\x2e\x00\x00\xfb')
+                                k+=1
+                                #print(arr)
+                           
+                            pts = np.array([barcode.polygon],np.int32)
+                            cv.polylines(frame,[pts],True,(255,0,0),5)
+                            pts2 = barcode.rect
+                            cv.putText(frame,myData,(pts2[0],pts2[1]),cv.FONT_HERSHEY_COMPLEX,1,(10,0,0),1)
+                        cv.imshow('In',frame)
+                        cv.waitKey(10) 
+                        if len(arr)==6:
+                           data1['text']=str(arr[0])      
+                           data2['text']=str(arr[1]) 
+                           data3['text']=str(arr[2]) 
+                           data4['text']=str(arr[3]) 
+                           data5['text']=str(arr[4]) 
+                           data6['text']=str(arr[5])  #frame.destroy()
+                           cv.destroyAllWindows()
+                           break
+                #error['text']="                                  no error                                  "
             
         elif i==1: 
             progress_bar['maximum']=60
@@ -85,23 +114,25 @@ def step7():
                 s2=serial()
                 master.update_idletasks()
                 master.configure(bg='#40d0e3')
-                if s2[2:4]=='00' and s2[4:6]=='00':
+                if s2[2:4]=='00' and s2[4:6]=='01':
                     print(s2[2:4], s2[4:6])
                     progress_bar['value'] += 1                      
                     increment()
                     time.sleep(1)
                     if k==0:
-                     ser.write(b'\xfa\x1b\x2b\x00\x00\xfb')
+                     ser.write(b'\xfa\x1b\x2b\x00\x00\xfb')   #induction power on
                      process1['text']='Induction Power ON'
-                        
-                     ser.write(b'\xfa\x0f\x1f\x00\x00\xfb')
-                     process2['text']='Stirrer Rotates Fwd'  
+                     time.sleep(0.5)
+                     ser.write(b'\xfa\x2a\x4a\x00\x00\xfb')   #induction on key
+                     time.sleep(0.5)
+                     ser.write(b'\xfa\x2a\x4b\x00\x00\xfb')   #induction func key
+                     time.sleep(0.5)
+                     ser.write(b'\xfa\x0f\x1f\x00\x00\xfb')   #stirrer motor
+                     process2['text']='Stirrer Rotates Fwd' 
                     k+=1
                     error['text']="                                  no error                                  "   
                     error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    p=0
-                    while True:
                         master.update_idletasks()
                         master.configure(bg='#40d0e3')
                         time.sleep(1)
@@ -109,7 +140,7 @@ def step7():
                         error['text']="Power Loss, Using Battery Supply"
                         print("Power Loss") 
                         error['bg']='#ba001c'
-                        p+=1
+                        p=0
                         if p==5:
                             error['text']='Cooking Process Terminated'
                             print('Cooking Process Terminated') 
@@ -117,12 +148,21 @@ def step7():
                             master.destroy()
                             break
                         else:
-                            continue       
-                    time.sleep(1)
+                            continue
+                        p+=1
                 elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
                     error['text']='               Power Turned ON               '
                     error['bg']='#36cf4f' 
                     print('Power Turned ON') 
+                    ser.write(b'\xfa\x1b\x2b\x00\x00\xfb')   #induction power on
+                    process1['text']='Induction Power ON'
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4a\x00\x00\xfb')   #induction on key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4b\x00\x00\xfb')   #induction func key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x0f\x1f\x00\x00\xfb')   #stirrer motor
+                    process2['text']='Stirrer Rotates Fwd'  
                     time.sleep(1)         
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
@@ -222,7 +262,7 @@ def step7():
                 s2=serial()
                 master.update_idletasks()
                 master.configure(bg='#40d0e3')
-                if s2[2:4]=='00' and s2[4:6]=='00':
+                if s2[2:4]=='00' and s2[4:6]=='01':
                     print('clear')
                     progress_bar['value'] += 1
                     increment()
@@ -231,23 +271,30 @@ def step7():
                         ser.write(b'\xfa\x0e\x2e\x00\x00\xfb')
                         process3['text']='Tray Rotates Forward'
                     if l==5:
+                        ser.write(b'\xfa\x0a\x1a\x00\x00\xfb')
+                        process3['text']='Lid Door Opens'
+                    if l==10:
                         ser.write(b'\xfa\x0c\x1c\x00\x00\xfb')
                         process3['text']='Trap Door Opens'
-                    if l==10:
+                    if l==15:
+                        ser.write(b'\xfa\x0d\x1d\x00\x00\xfb')
+                        process3['text']='Packet Piercing'
+                    if l==20:
                         ser.write(b'\xfa\x0b\x1b\x00\x00\xfb')
                         process3['text']='Rack 1 Launch'
-                    if l==15:
+                    if l==25:
                         ser.write(b'\xfa\x0b\x2b\x00\x00\xfb')
                         process3['text']='Rack 1 Retract'
-                    if l==20:
+                    if l==30:
+                        ser.write(b'\xfa\x0a\x2a\x00\x00\xfb')
+                        process3['text']='Lid Door Close'
+                    if l==35:
                         ser.write(b'\xfa\x0c\x2c\x00\x00\xfb')
                         process3['text']='Trap Door Close'
                     l+=1
                     error['text']="                                  no error                                  "   
                     error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    p=0
-                    while True:
                         master.update_idletasks()
                         master.configure(bg='#40d0e3')
                         time.sleep(1)
@@ -255,7 +302,7 @@ def step7():
                         error['text']="Power Loss, Using Battery Supply"
                         print("Power Loss") 
                         error['bg']='#ba001c'
-                        p+=1
+                        p=0
                         if p==5:
                             error['text']='Cooking Process Terminated'
                             print('Cooking Process Terminated') 
@@ -263,13 +310,22 @@ def step7():
                             master.destroy()
                             break
                         else:
-                            continue       
-                    time.sleep(1)
+                            continue
+                        p+=1
                 elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
                     error['text']='               Power Turned ON               '
                     error['bg']='#36cf4f' 
                     print('Power Turned ON') 
-                    time.sleep(1) 
+                    ser.write(b'\xfa\x1b\x2b\x00\x00\xfb')   #induction power on
+                    process1['text']='Induction Power ON'
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4a\x00\x00\xfb')   #induction on key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4b\x00\x00\xfb')   #induction func key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x0f\x1f\x00\x00\xfb')   #stirrer motor
+                    process2['text']='Stirrer Rotates Fwd' 
+                    time.sleep(1)
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
@@ -363,37 +419,44 @@ def step7():
             progress_bar['maximum']=60
             label_3['bg']='#c71e1e'  
             data2['bg']='#36cf4f'
-            m=0
-            while m<60:
+            l=0
+            while l<60:
                 s2=serial()
                 master.update_idletasks()
                 master.configure(bg='#40d0e3')
-                if s2[2:4]=='00' and s2[4:6]=='00':
+                if s2[2:4]=='00' and s2[4:6]=='01':
                     print('clear')
                     progress_bar['value'] += 1
                     increment()
                     time.sleep(1)
-                    if m==0:
+                    if l==0:
                         ser.write(b'\xfa\x0e\x2e\x00\x00\xfb')
                         process3['text']='Tray Rotates Forward'
-                    if m==5:
+                    if l==5:
+                        ser.write(b'\xfa\x0a\x1a\x00\x00\xfb')
+                        process3['text']='Lid Door Opens'
+                    if l==10:
                         ser.write(b'\xfa\x0c\x1c\x00\x00\xfb')
                         process3['text']='Trap Door Opens'
-                    if m==10:
+                    if l==15:
+                        ser.write(b'\xfa\x0d\x1d\x00\x00\xfb')
+                        process3['text']='Packet Piercing'
+                    if l==20:
                         ser.write(b'\xfa\x0b\x1b\x00\x00\xfb')
                         process3['text']='Rack 2 Launch'
-                    if m==15:
+                    if l==25:
                         ser.write(b'\xfa\x0b\x2b\x00\x00\xfb')
                         process3['text']='Rack 2 Retract'
-                    if m==20:
+                    if l==30:
+                        ser.write(b'\xfa\x0a\x2a\x00\x00\xfb')
+                        process3['text']='Lid Door Close'
+                    if l==35:
                         ser.write(b'\xfa\x0c\x2c\x00\x00\xfb')
                         process3['text']='Trap Door Close'
-                    m+=1
+                    l+=1
                     error['text']="                                  no error                                  "   
                     error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    p=0
-                    while True:
                         master.update_idletasks()
                         master.configure(bg='#40d0e3')
                         time.sleep(1)
@@ -401,7 +464,7 @@ def step7():
                         error['text']="Power Loss, Using Battery Supply"
                         print("Power Loss") 
                         error['bg']='#ba001c'
-                        p+=1
+                        p=0
                         if p==5:
                             error['text']='Cooking Process Terminated'
                             print('Cooking Process Terminated') 
@@ -409,13 +472,22 @@ def step7():
                             master.destroy()
                             break
                         else:
-                            continue       
-                    time.sleep(1)
+                            continue
+                        p+=1
                 elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
                     error['text']='               Power Turned ON               '
                     error['bg']='#36cf4f' 
                     print('Power Turned ON') 
-                    time.sleep(1) 
+                    ser.write(b'\xfa\x1b\x2b\x00\x00\xfb')   #induction power on
+                    process1['text']='Induction Power ON'
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4a\x00\x00\xfb')   #induction on key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4b\x00\x00\xfb')   #induction func key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x0f\x1f\x00\x00\xfb')   #stirrer motor
+                    process2['text']='Stirrer Rotates Fwd' 
+                    time.sleep(1)   
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
@@ -513,7 +585,7 @@ def step7():
                 s2=serial()
                 master.update_idletasks()
                 master.configure(bg='#40d0e3')
-                if s2[2:4]=='00' and s2[4:6]=='00':
+                if s2[2:4]=='00' and s2[4:6]=='01':
                     print('clear')
                     progress_bar['value'] += 1
                     increment()
@@ -528,8 +600,6 @@ def step7():
                     error['text']="                                  no error                                  "      
                     error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    p=0
-                    while True:
                         master.update_idletasks()
                         master.configure(bg='#40d0e3')
                         time.sleep(1)
@@ -537,7 +607,7 @@ def step7():
                         error['text']="Power Loss, Using Battery Supply"
                         print("Power Loss") 
                         error['bg']='#ba001c'
-                        p+=1
+                        p=0
                         if p==5:
                             error['text']='Cooking Process Terminated'
                             print('Cooking Process Terminated') 
@@ -545,13 +615,22 @@ def step7():
                             master.destroy()
                             break
                         else:
-                            continue       
-                    time.sleep(1)
+                            continue
+                        p+=1
                 elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
                     error['text']='               Power Turned ON               '
                     error['bg']='#36cf4f' 
                     print('Power Turned ON') 
-                    time.sleep(1) 
+                    ser.write(b'\xfa\x1b\x2b\x00\x00\xfb')   #induction power on
+                    process1['text']='Induction Power ON'
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4a\x00\x00\xfb')   #induction on key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4b\x00\x00\xfb')   #induction func key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x0f\x1f\x00\x00\xfb')   #stirrer motor
+                    process2['text']='Stirrer Rotates Fwd' 
+                    time.sleep(1)  
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
@@ -645,37 +724,44 @@ def step7():
             progress_bar['maximum']=60
             label_5['bg']='#c71e1e'   
             data3['bg']='#36cf4f'
-            j=0
-            while j<60:
+            l=0
+            while l<60:
                 s2=serial()
                 master.update_idletasks()
                 master.configure(bg='#40d0e3')
-                if s2[2:4]=='00' and s2[4:6]=='00':
+                if s2[2:4]=='00' and s2[4:6]=='01':
                     print('clear')
                     progress_bar['value'] += 1
                     increment()
                     time.sleep(1)
-                    if j==0:
+                    if l==0:
                         ser.write(b'\xfa\x0e\x2e\x00\x00\xfb')
                         process3['text']='Tray Rotates Forward'
-                    if j==5:
+                    if l==5:
+                        ser.write(b'\xfa\x0a\x1a\x00\x00\xfb')
+                        process3['text']='Lid Door Opens'
+                    if l==10:
                         ser.write(b'\xfa\x0c\x1c\x00\x00\xfb')
                         process3['text']='Trap Door Opens'
-                    if j==10:
+                    if l==15:
+                        ser.write(b'\xfa\x0d\x1d\x00\x00\xfb')
+                        process3['text']='Packet Piercing'
+                    if l==20:
                         ser.write(b'\xfa\x0b\x1b\x00\x00\xfb')
                         process3['text']='Rack 3 Launch'
-                    if j==15:
+                    if l==25:
                         ser.write(b'\xfa\x0b\x2b\x00\x00\xfb')
                         process3['text']='Rack 3 Retract'
-                    if j==20:
+                    if l==30:
+                        ser.write(b'\xfa\x0a\x2a\x00\x00\xfb')
+                        process3['text']='Lid Door Close'
+                    if l==35:
                         ser.write(b'\xfa\x0c\x2c\x00\x00\xfb')
-                        process3['text']='Trap Door Close'        
-                    j+=1
+                        process3['text']='Trap Door Close'
+                    l+=1
                     error['text']="                                  no error                                  "   
                     error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    p=0
-                    while True:
                         master.update_idletasks()
                         master.configure(bg='#40d0e3')
                         time.sleep(1)
@@ -683,7 +769,7 @@ def step7():
                         error['text']="Power Loss, Using Battery Supply"
                         print("Power Loss") 
                         error['bg']='#ba001c'
-                        p+=1
+                        p=0
                         if p==5:
                             error['text']='Cooking Process Terminated'
                             print('Cooking Process Terminated') 
@@ -691,13 +777,22 @@ def step7():
                             master.destroy()
                             break
                         else:
-                            continue       
-                    time.sleep(1)
+                            continue
+                        p+=1
                 elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
                     error['text']='               Power Turned ON               '
                     error['bg']='#36cf4f' 
                     print('Power Turned ON') 
-                    time.sleep(1) 
+                    ser.write(b'\xfa\x1b\x2b\x00\x00\xfb')   #induction power on
+                    process1['text']='Induction Power ON'
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4a\x00\x00\xfb')   #induction on key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4b\x00\x00\xfb')   #induction func key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x0f\x1f\x00\x00\xfb')   #stirrer motor
+                    process2['text']='Stirrer Rotates Fwd' 
+                    time.sleep(1)  
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
@@ -791,40 +886,44 @@ def step7():
             progress_bar['maximum']=60
             label_6['bg']='#c71e1e'   
             data4['bg']='#36cf4f'
-            j=0
-            while j<60:
+            l=0
+            while l<60:
                 s2=serial()
                 master.update_idletasks()
                 master.configure(bg='#40d0e3')
-                if s2[2:4]=='00' and s2[4:6]=='00':
+                if s2[2:4]=='00' and s2[4:6]=='01':
                     print('clear')
                     progress_bar['value'] += 1
                     increment()
                     time.sleep(1)
-                    if j==0:
+                    if l==0:
                         ser.write(b'\xfa\x0e\x2e\x00\x00\xfb')
                         process3['text']='Tray Rotates Forward'
-                    if j==5:
+                    if l==5:
+                        ser.write(b'\xfa\x0a\x1a\x00\x00\xfb')
+                        process3['text']='Lid Door Opens'
+                    if l==10:
                         ser.write(b'\xfa\x0c\x1c\x00\x00\xfb')
                         process3['text']='Trap Door Opens'
-                    if j==10:
+                    if l==15:
+                        ser.write(b'\xfa\x0d\x1d\x00\x00\xfb')
+                        process3['text']='Packet Piercing'
+                    if l==20:
                         ser.write(b'\xfa\x0b\x1b\x00\x00\xfb')
                         process3['text']='Rack 4 Launch'
-                    if j==15:
+                    if l==25:
                         ser.write(b'\xfa\x0b\x2b\x00\x00\xfb')
                         process3['text']='Rack 4 Retract'
-                    if j==20:
+                    if l==30:
+                        ser.write(b'\xfa\x0a\x2a\x00\x00\xfb')
+                        process3['text']='Lid Door Close'
+                    if l==35:
                         ser.write(b'\xfa\x0c\x2c\x00\x00\xfb')
                         process3['text']='Trap Door Close'
-                    if j==25:
-                        ser.write(b'\xfa\x0e\x1e\x00\x00\xfb')
-                        process3['text']='Tray to Home Position'
-                    j+=1
+                    l+=1
                     error['text']="                                  no error                                  "    
                     error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    p=0
-                    while True:
                         master.update_idletasks()
                         master.configure(bg='#40d0e3')
                         time.sleep(1)
@@ -832,7 +931,7 @@ def step7():
                         error['text']="Power Loss, Using Battery Supply"
                         print("Power Loss") 
                         error['bg']='#ba001c'
-                        p+=1
+                        p=0
                         if p==5:
                             error['text']='Cooking Process Terminated'
                             print('Cooking Process Terminated') 
@@ -840,13 +939,22 @@ def step7():
                             master.destroy()
                             break
                         else:
-                            continue       
-                    time.sleep(1)
+                            continue
+                        p+=1
                 elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
                     error['text']='               Power Turned ON               '
                     error['bg']='#36cf4f' 
                     print('Power Turned ON') 
-                    time.sleep(1) 
+                    ser.write(b'\xfa\x1b\x2b\x00\x00\xfb')   #induction power on
+                    process1['text']='Induction Power ON'
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4a\x00\x00\xfb')   #induction on key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4b\x00\x00\xfb')   #induction func key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x0f\x1f\x00\x00\xfb')   #stirrer motor
+                    process2['text']='Stirrer Rotates Fwd' 
+                    time.sleep(1)  
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
@@ -940,40 +1048,44 @@ def step7():
             progress_bar['maximum']=60
             label_7['bg']='#c71e1e'  
             data5['bg']='#36cf4f'
-            j=0
-            while j<60:
+            l=0
+            while l<60:
                 s2=serial()
                 master.update_idletasks()
                 master.configure(bg='#40d0e3')
-                if s2[2:4]=='00' and s2[4:6]=='00':
+                if s2[2:4]=='00' and s2[4:6]=='01':
                     print('clear')
                     progress_bar['value'] += 1
                     increment()
                     time.sleep(1)
-                    if j==0:
+                    if l==0:
                         ser.write(b'\xfa\x0e\x2e\x00\x00\xfb')
                         process3['text']='Tray Rotates Forward'
-                    if j==5:
+                    if l==5:
+                        ser.write(b'\xfa\x0a\x1a\x00\x00\xfb')
+                        process3['text']='Lid Door Opens'
+                    if l==10:
                         ser.write(b'\xfa\x0c\x1c\x00\x00\xfb')
                         process3['text']='Trap Door Opens'
-                    if j==10:
+                    if l==15:
+                        ser.write(b'\xfa\x0d\x1d\x00\x00\xfb')
+                        process3['text']='Packet Piercing'
+                    if l==20:
                         ser.write(b'\xfa\x0b\x1b\x00\x00\xfb')
                         process3['text']='Rack 5 Launch'
-                    if j==15:
+                    if l==25:
                         ser.write(b'\xfa\x0b\x2b\x00\x00\xfb')
                         process3['text']='Rack 5 Retract'
-                    if j==20:
+                    if l==30:
+                        ser.write(b'\xfa\x0a\x2a\x00\x00\xfb')
+                        process3['text']='Lid Door Close'
+                    if l==35:
                         ser.write(b'\xfa\x0c\x2c\x00\x00\xfb')
                         process3['text']='Trap Door Close'
-                    if j==25:
-                        ser.write(b'\xfa\x0e\x1e\x00\x00\xfb')
-                        process3['text']='Tray to Home Position'
-                    j+=1
+                    l+=1
                     error['text']="                                  no error                                  "    
                     error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    p=0
-                    while True:
                         master.update_idletasks()
                         master.configure(bg='#40d0e3')
                         time.sleep(1)
@@ -981,7 +1093,7 @@ def step7():
                         error['text']="Power Loss, Using Battery Supply"
                         print("Power Loss") 
                         error['bg']='#ba001c'
-                        p+=1
+                        p=0
                         if p==5:
                             error['text']='Cooking Process Terminated'
                             print('Cooking Process Terminated') 
@@ -989,13 +1101,22 @@ def step7():
                             master.destroy()
                             break
                         else:
-                            continue       
-                    time.sleep(1)
+                            continue
+                        p+=1
                 elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
                     error['text']='               Power Turned ON               '
                     error['bg']='#36cf4f' 
                     print('Power Turned ON') 
-                    time.sleep(1) 
+                    ser.write(b'\xfa\x1b\x2b\x00\x00\xfb')   #induction power on
+                    process1['text']='Induction Power ON'
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4a\x00\x00\xfb')   #induction on key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4b\x00\x00\xfb')   #induction func key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x0f\x1f\x00\x00\xfb')   #stirrer motor
+                    process2['text']='Stirrer Rotates Fwd' 
+                    time.sleep(1)  
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
@@ -1089,54 +1210,61 @@ def step7():
             progress_bar['maximum']=60
             label_8['bg']='#c71e1e'  
             data6['bg']='#36cf4f'
-            j=0
-            while j<60:
+            l=0
+            while l<60:
                 s2=serial()
                 master.update_idletasks()
                 master.configure(bg='#40d0e3')
-                if s2[2:4]=='00' and s2[4:6]=='00':
+                if s2[2:4]=='00' and s2[4:6]=='01':
                     print('clear')
                     progress_bar['value'] += 1
                     increment()
                     time.sleep(1)
-                    if j==0:
+                    if l==0:
                         ser.write(b'\xfa\x0e\x2e\x00\x00\xfb')
                         process3['text']='Tray Rotates Forward'
-                    if j==5:
+                    if l==5:
+                        ser.write(b'\xfa\x0a\x1a\x00\x00\xfb')
+                        process3['text']='Lid Door Opens'
+                    if l==10:
                         ser.write(b'\xfa\x0c\x1c\x00\x00\xfb')
                         process3['text']='Trap Door Opens'
-                    if j==10:
+                    if l==15:
+                        ser.write(b'\xfa\x0d\x1d\x00\x00\xfb')
+                        process3['text']='Packet Piercing'
+                    if l==20:
                         ser.write(b'\xfa\x0b\x1b\x00\x00\xfb')
                         process3['text']='Rack 6 Launch'
-                    if j==15:
+                    if l==25:
                         ser.write(b'\xfa\x0b\x2b\x00\x00\xfb')
                         process3['text']='Rack 6 Retract'
-                    if j==20:
+                    if l==30:
+                        ser.write(b'\xfa\x0a\x2a\x00\x00\xfb')
+                        process3['text']='Lid Door Close'
+                    if l==35:
                         ser.write(b'\xfa\x0c\x2c\x00\x00\xfb')
                         process3['text']='Trap Door Close'
-                    if j==25:
-                        ser.write(b'\xfa\x0e\x1e\x00\x00\xfb')
-                        process3['text']='Tray to Home Position'
-                    if j==58:
+                    
+                    if l==57:
                         ser.write(b'\xfa\x0f\x3f\x00\x00\xfb')
                         process2['text']='Stirrer Motor OFF'
-                    if j==59:
+                    if l==58:
+                        ser.write(b'\xfa\x2a\x4f\x00\x00\xfb')
+                        process2['text']='Induction OFF Key'
+                    if l==59:
                         ser.write(b'\xfa\x1b\x3b\x00\x00\xfb')
                         process1['text']='Induction Power OFF'
-                    j+=1
+                    l+=1
                     error['text']="                                  no error                                  "    
                     error['bg']='#ed7464'
                 elif s2[2:4]=='09' and s2[8:10]=='04':  #Power Loss
-                    p=0
-                    while True:
                         master.update_idletasks()
                         master.configure(bg='#40d0e3')
                         time.sleep(1)
-                        
                         error['text']="Power Loss, Using Battery Supply"
                         print("Power Loss") 
                         error['bg']='#ba001c'
-                        p+=1
+                        p=0
                         if p==5:
                             error['text']='Cooking Process Terminated'
                             print('Cooking Process Terminated') 
@@ -1144,13 +1272,22 @@ def step7():
                             master.destroy()
                             break
                         else:
-                            continue       
-                    time.sleep(1)
+                            continue
+                        p+=1
                 elif s2[2:4]=='09' and s2[8:10]=='00': #Power ON
                     error['text']='               Power Turned ON               '
                     error['bg']='#36cf4f' 
                     print('Power Turned ON') 
-                    time.sleep(1) 
+                    ser.write(b'\xfa\x1b\x2b\x00\x00\xfb')   #induction power on
+                    process1['text']='Induction Power ON'
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4a\x00\x00\xfb')   #induction on key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x2a\x4b\x00\x00\xfb')   #induction func key
+                    time.sleep(0.5)
+                    ser.write(b'\xfa\x0f\x1f\x00\x00\xfb')   #stirrer motor
+                    process2['text']='Stirrer Rotates Fwd' 
+                    time.sleep(1)  
                 elif s2[2:4]=='01' and s2[4:6]=='04':
                     print("Induction_IGPT_Temp _Error") 
                     error['text']="Induction_IGPT_Temp _Error"                        
@@ -1243,7 +1380,7 @@ def step7():
             process3['text']='Cooking Completed'
         
 master = tk.Tk()
-master.geometry('720x480')
+master.geometry('900x540')
 master.title('Cooking_Process')
 master.configure(bg='#40d0e3')
 
@@ -1303,7 +1440,7 @@ time_8=tk.Label(master, text='60sec', bg='#40d0e3')
 time_8.place(relx = 0.92, rely = 0.35, anchor = 'center')
 
 seconds_label = tk.Label(master, text='0 sec', bg='#40d0e3')
-seconds_label.place(relx = 0.9, rely=0.466, anchor = 'center')
+seconds_label.place(relx = 0.85, rely=0.47, anchor = 'center')
 
 progress_bar = ttk.Progressbar(master, orient="horizontal",mode="determinate",maximum=100, length=500, variable=Variable)
 progress_bar.place(relx = 0.5, rely = 0.47, anchor = 'center')
